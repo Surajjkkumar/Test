@@ -11,12 +11,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
+        "backgroundColor": "#5B7A9D",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
