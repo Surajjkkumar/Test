@@ -1,15 +1,65 @@
-import React from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import HeroVideoPlaylist from '../components/HeroVideoPlaylist';
-import ServiceCarousel from '../components/ServiceCarousel';
+import ServiceCarousel, { Service } from '../components/ServiceCarousel';
 import BottomNavigation from '../components/BottomNavigation';
+import BottomSheet from '../components/BottomSheet';
+import Toast from '../components/Toast';
 import { colors, NAV_HEIGHT } from '../theme';
 
+const SHEET_CONTENT: Record<string, { title: string; body: string }> = {
+  profile: {
+    title: 'Mathew Joes',
+    body: 'Platinum member · Member since 2019',
+  },
+};
+
+const TOAST_DURATION_MS = 1800;
+
 export default function HomeScreen() {
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [sheetKey, setSheetKey] = useState('profile');
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openSheet = useCallback((key: string) => {
+    setSheetKey(key);
+    setSheetVisible(true);
+  }, []);
+
+  const closeSheet = useCallback(() => {
+    setSheetVisible(false);
+  }, []);
+
+  const showToast = useCallback((message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMessage(message);
+    setToastVisible(true);
+    toastTimer.current = setTimeout(() => setToastVisible(false), TOAST_DURATION_MS);
+  }, []);
+
+  const handleServiceSelect = useCallback(
+    (service: Service) => {
+      showToast(`${service.label} selected`);
+    },
+    [showToast]
+  );
+
+  const handleNavSelect = useCallback(
+    (id: string) => {
+      if (id === 'Home') return;
+      showToast(`${id} flow will be designed next`);
+    },
+    [showToast]
+  );
+
+  const sheetContent = SHEET_CONTENT[sheetKey];
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -35,14 +85,19 @@ export default function HomeScreen() {
               <Text style={styles.brand}>COBALT</Text>
               <Text style={styles.brandSub}>BEACH CLUB</Text>
             </View>
-            <View style={styles.weather}>
+            <View style={styles.weather} accessibilityLabel="Sunny, 28 degrees">
               <Ionicons name="sunny" size={14} color={colors.white} />
               <Text style={styles.weatherText}>28°</Text>
             </View>
           </View>
-          <View style={styles.avatar}>
+          <TouchableOpacity
+            style={styles.avatar}
+            onPress={() => openSheet('profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+          >
             <Text style={styles.avatarText}>MJ</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.spacer} />
@@ -53,10 +108,19 @@ export default function HomeScreen() {
       </SafeAreaView>
 
       <View style={[styles.bottomBlock, { bottom: NAV_HEIGHT + 16 }]} pointerEvents="box-none">
-        <ServiceCarousel />
+        <ServiceCarousel onSelect={handleServiceSelect} />
       </View>
 
-      <BottomNavigation />
+      <BottomNavigation onSelect={handleNavSelect} />
+
+      <BottomSheet
+        visible={sheetVisible}
+        title={sheetContent.title}
+        body={sheetContent.body}
+        onClose={closeSheet}
+      />
+
+      <Toast message={toastMessage} visible={toastVisible} />
     </View>
   );
 }
